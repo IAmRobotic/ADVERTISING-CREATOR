@@ -9,14 +9,14 @@
  * - Split-screen interface: controls on left, live preview on right
  * - Text input boxes: Simple headline, subtext, and CTA editing above preview
  * - Size presets: 7 different ad formats optimized for social media and web
- * - Font size controls: Adjustable headline and subtext sizing for high impact
+ * - Font size controls: Adjustable sizing for headline, subtext, and button text
  * - Markdown-style highlighting: **text** for gradient (headline) or highlight (subtext)
  * - Manual line breaks: Use Enter in subtext field to control line layout
  * - Export mode: clean view for screenshots without editing controls
  * - Responsive design: adapts content to fit each ad format perfectly
  * 
  * @author AI Assistant
- * @version 2.4
+ * @version 2.5
  */
 
 import React, { useState } from 'react';
@@ -102,7 +102,7 @@ interface AdPreviewProps {
   subtext: string;
   ctaText: string;
   adSize: { id: string; width: string; height: string };
-  fontSizes: { headline: string; subtext: string };
+  fontSizes: { headline: string; subtext: string; cta: string };
 }
 
 const AdPreview: React.FC<AdPreviewProps> = ({ headline, subtext, ctaText, adSize, fontSizes }) => {
@@ -111,7 +111,7 @@ const AdPreview: React.FC<AdPreviewProps> = ({ headline, subtext, ctaText, adSiz
    * Get font size classes based on user selection and text type
    * Maps user-friendly size names to Tailwind responsive font classes
    */
-  const getFontSizeClasses = (type: 'headline' | 'subtext', baseSize: string) => {
+  const getFontSizeClasses = (type: 'headline' | 'subtext' | 'cta', baseSize: string) => {
     const sizeMap = {
       headline: {
         small: 'text-3xl sm:text-4xl md:text-5xl',
@@ -123,10 +123,15 @@ const AdPreview: React.FC<AdPreviewProps> = ({ headline, subtext, ctaText, adSiz
         small: 'text-base sm:text-lg',
         normal: 'text-lg sm:text-xl md:text-2xl',
         large: 'text-xl sm:text-2xl md:text-3xl'
+      },
+      cta: {
+        small: 'text-sm md:text-base',
+        normal: 'text-base md:text-lg',
+        large: 'text-lg md:text-xl'
       }
     };
 
-    const userSize = type === 'headline' ? fontSizes.headline : fontSizes.subtext;
+    const userSize = fontSizes[type];
     return sizeMap[type][userSize as keyof typeof sizeMap[typeof type]] || baseSize;
   };
 
@@ -141,7 +146,7 @@ const AdPreview: React.FC<AdPreviewProps> = ({ headline, subtext, ctaText, adSiz
         container: 'p-2',
         heading: getFontSizeClasses('headline', 'text-xl leading-tight') + ' font-bold leading-tight',
         subtext: getFontSizeClasses('subtext', 'text-xs leading-tight') + ' leading-tight',
-        button: 'px-2 py-1 text-sm',
+        button: `px-2 py-1 ${getFontSizeClasses('cta', 'text-sm')}`,
         spacing: 'mb-1'
       };
     }
@@ -151,7 +156,7 @@ const AdPreview: React.FC<AdPreviewProps> = ({ headline, subtext, ctaText, adSiz
         container: 'p-4',
         heading: getFontSizeClasses('headline', 'text-4xl leading-tight') + ' font-bold leading-tight',
         subtext: getFontSizeClasses('subtext', 'text-lg leading-snug') + ' leading-snug',
-        button: 'px-4 py-2 text-base',
+        button: `px-4 py-2 ${getFontSizeClasses('cta', 'text-base')}`,
         spacing: 'mb-3'
       };
     }
@@ -161,7 +166,7 @@ const AdPreview: React.FC<AdPreviewProps> = ({ headline, subtext, ctaText, adSiz
         container: 'p-4',
         heading: getFontSizeClasses('headline', 'text-5xl leading-tight') + ' font-bold leading-tight',
         subtext: getFontSizeClasses('subtext', 'text-xl leading-snug') + ' leading-snug',
-        button: 'px-4 py-2 text-lg',
+        button: `px-4 py-2 ${getFontSizeClasses('cta', 'text-lg')}`,
         spacing: 'mb-4'
       };
     }
@@ -171,7 +176,7 @@ const AdPreview: React.FC<AdPreviewProps> = ({ headline, subtext, ctaText, adSiz
       container: 'p-6',
       heading: getFontSizeClasses('headline', 'text-6xl leading-tight') + ' font-bold leading-tight',
       subtext: getFontSizeClasses('subtext', 'text-2xl leading-snug') + ' leading-snug',
-      button: 'px-6 py-3 text-xl',
+      button: `px-6 py-3 ${getFontSizeClasses('cta', 'text-xl')}`,
       spacing: 'mb-6'
     };
   };
@@ -242,10 +247,11 @@ Chumzee helps you **build momentum** and nurture
     ctaText: "Start building momentum"
   });
 
-  /** Font size controls for headline and subtext */
+  /** Font size controls for headline, subtext, and CTA */
   const [fontSizes, setFontSizes] = useState({
     headline: 'normal',  // Options: small, normal, large, xl
-    subtext: 'normal'    // Options: small, normal, large
+    subtext: 'normal',   // Options: small, normal, large
+    cta: 'normal'        // Options: small, normal, large
   });
 
   // ========== COMPUTED VALUES ==========
@@ -394,6 +400,19 @@ Chumzee helps you **build momentum** and nurture
                   <div>
                     <Label htmlFor="subtext-size" className="text-sm font-medium">Subtext Size</Label>
                     <Select value={fontSizes.subtext} onValueChange={(value) => updateFontSize('subtext', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="small">Small</SelectItem>
+                        <SelectItem value="normal">Normal</SelectItem>
+                        <SelectItem value="large">Large</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="cta-size" className="text-sm font-medium">Button Text Size</Label>
+                    <Select value={fontSizes.cta} onValueChange={(value) => updateFontSize('cta', value)}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
