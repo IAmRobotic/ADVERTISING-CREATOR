@@ -1,41 +1,36 @@
 /**
  * Ad Builder - Landing Page Content to Marketing Materials Converter
  * 
- * This component creates an interface for converting landing page sections (Hero, Problem, Solution)
- * into marketing materials of various sizes. It preserves all original styling (gradients, animations,
- * typography) while making text content editable and adapting layouts for different ad formats.
+ * This component creates an interface for converting landing page sections into marketing materials
+ * of various sizes. Instead of click-to-edit, it uses simple text input boxes above the preview
+ * for easy content editing.
  * 
  * Key Features:
  * - Split-screen interface: controls on left, live preview on right
- * - Section selector: choose between Hero, Problem, and Solution sections
+ * - Text input boxes: Simple headline, subtext, and CTA editing above preview
  * - Size presets: 7 different ad formats optimized for social media and web
- * - Click-to-edit text: all text content is editable in real-time
- * - Font size controls: adjustable headline and subtext sizing
+ * - Font size controls: Adjustable headline and subtext sizing for high impact
+ * - Markdown-style highlighting: **text** for gradient (headline) or highlight (subtext)
+ * - Manual line breaks: Use Enter in subtext field to control line layout
  * - Export mode: clean view for screenshots without editing controls
  * - Responsive design: adapts content to fit each ad format perfectly
  * 
  * @author AI Assistant
- * @version 1.0
+ * @version 2.5
  */
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Camera, Download } from "lucide-react";
-import EditableHero from "@/components/ads/EditableHero";
-import EditableProblem from "@/components/ads/EditableProblem";
-import EditableSolution from "@/components/ads/EditableSolution";
+import { Camera, ArrowRight } from "lucide-react";
 
 /**
  * Ad size presets with dimensions optimized for different platforms
- * Each preset includes:
- * - id: unique identifier for the preset
- * - name: display name showing actual pixel dimensions
- * - width/height: CSS dimensions for preview (scaled down from actual)
- * - description: platforms and use cases for this size
  */
 const adSizes = [
   { id: 'square', name: 'Square (1080x1080)', width: '500px', height: '500px', description: 'Instagram posts, Facebook posts' },
@@ -48,31 +43,189 @@ const adSizes = [
 ];
 
 /**
- * Section types that can be edited
- * Each section corresponds to a component from the original landing page:
- * - hero: Main value proposition with call-to-action button
- * - problem: Pain points and challenges the product solves
- * - solution: Features and benefits of the product
+ * Helper function to parse text for gradient effect in headline
+ * - Text wrapped in **text** gets the gradient
  */
-const sections = [
-  { id: 'hero', name: 'Hero Section', description: 'Main headline with call-to-action' },
-  { id: 'problem', name: 'Problem Section', description: 'Pain points and challenges' },
-  { id: 'solution', name: 'Solution Section', description: 'Features and benefits' },
-];
+const parseGradientText = (text: string) => {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      const gradientText = part.slice(2, -2); // Remove ** markers
+      return (
+        <span key={index} className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-teal-600">
+          {gradientText}
+        </span>
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
+};
 
 /**
- * AdBuilder Component
- * 
- * Main component that orchestrates the ad building interface. Manages all state for
- * section selection, content editing, size selection, and export functionality.
- * 
- * @returns {JSX.Element} The complete ad builder interface
+ * Helper function to parse text with markdown-style highlighting
+ * - Text wrapped in **text** gets highlighted
+ * - Text wrapped in **~text~** gets highlighted and tilted
+ */
+const parseHighlightedText = (text: string) => {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      let highlightText = part.slice(2, -2); // Remove ** markers
+      let isTilted = false;
+      
+      // Check for tilted marker (~)
+      if (highlightText.startsWith('~') && highlightText.endsWith('~')) {
+        highlightText = highlightText.slice(1, -1);
+        isTilted = true;
+      }
+      
+      const className = `bg-yellow-400 font-bold px-1 py-0.5 rounded ${isTilted ? 'inline-block rotate-[-2deg]' : ''}`;
+      
+      return (
+        <span key={index} className={className}>
+          {highlightText}
+        </span>
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
+};
+
+/**
+ * Simple Ad Preview Component
+ * Renders the ad creative using the provided text content with user-controlled font sizes
+ */
+interface AdPreviewProps {
+  headline: string;
+  subtext: string;
+  ctaText: string;
+  adSize: { id: string; width: string; height: string };
+  fontSizes: { headline: string; subtext: string };
+}
+
+const AdPreview: React.FC<AdPreviewProps> = ({ headline, subtext, ctaText, adSize, fontSizes }) => {
+  
+  /**
+   * Get font size classes based on user selection and text type
+   * Maps user-friendly size names to Tailwind responsive font classes
+   */
+  const getFontSizeClasses = (type: 'headline' | 'subtext', baseSize: string) => {
+    const sizeMap = {
+      headline: {
+        small: 'text-3xl sm:text-4xl md:text-5xl',
+        normal: 'text-4xl sm:text-5xl md:text-6xl',
+        large: 'text-5xl sm:text-6xl md:text-7xl',
+        xl: 'text-6xl sm:text-7xl md:text-8xl'
+      },
+      subtext: {
+        small: 'text-base sm:text-lg',
+        normal: 'text-lg sm:text-xl md:text-2xl',
+        large: 'text-xl sm:text-2xl md:text-3xl'
+      }
+    };
+
+    const userSize = type === 'headline' ? fontSizes.headline : fontSizes.subtext;
+    return sizeMap[type][userSize as keyof typeof sizeMap[typeof type]] || baseSize;
+  };
+
+  // Calculate responsive classes based on ad size
+  const getResponsiveClasses = () => {
+    const isBanner = adSize.id === 'banner';
+    const isPortrait = adSize.id === 'portrait';
+    const isLandscape = adSize.id === 'landscape' || adSize.id === 'linkedin-sponsored';
+
+    if (isBanner) {
+      return {
+        container: 'p-2',
+        heading: getFontSizeClasses('headline', 'text-xl leading-tight') + ' font-bold leading-tight',
+        subtext: getFontSizeClasses('subtext', 'text-xs leading-tight') + ' leading-tight',
+        button: 'px-2 py-1 text-sm',
+        spacing: 'mb-1'
+      };
+    }
+
+    if (isPortrait) {
+      return {
+        container: 'p-4',
+        heading: getFontSizeClasses('headline', 'text-4xl leading-tight') + ' font-bold leading-tight',
+        subtext: getFontSizeClasses('subtext', 'text-lg leading-snug') + ' leading-snug',
+        button: 'px-4 py-2 text-base',
+        spacing: 'mb-3'
+      };
+    }
+
+    if (isLandscape) {
+      return {
+        container: 'p-4',
+        heading: getFontSizeClasses('headline', 'text-5xl leading-tight') + ' font-bold leading-tight',
+        subtext: getFontSizeClasses('subtext', 'text-xl leading-snug') + ' leading-snug',
+        button: 'px-4 py-2 text-lg',
+        spacing: 'mb-4'
+      };
+    }
+
+    // Square and other formats (default)
+    return {
+      container: 'p-6',
+      heading: getFontSizeClasses('headline', 'text-6xl leading-tight') + ' font-bold leading-tight',
+      subtext: getFontSizeClasses('subtext', 'text-2xl leading-snug') + ' leading-snug',
+      button: 'px-6 py-3 text-xl',
+      spacing: 'mb-6'
+    };
+  };
+
+  const classes = getResponsiveClasses();
+
+  return (
+    <div className={`relative ${classes.container} overflow-hidden h-full flex flex-col justify-center bg-gradient-to-br from-purple-50 via-white to-teal-50`}>
+      {/* Subtle decorative background pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-4 left-4 w-8 h-8 bg-purple-200 rounded-full"></div>
+        <div className="absolute bottom-6 right-6 w-6 h-6 bg-teal-200 rounded-full"></div>
+        <div className="absolute top-1/3 right-8 w-4 h-4 bg-yellow-200 rounded-full"></div>
+      </div>
+      
+      <div className="text-center relative z-10">
+        {/* Main Headline */}
+        <h1 className={`${classes.heading} text-indigo-800 ${classes.spacing}`}>
+          {parseGradientText(headline)}
+        </h1>
+        
+        {/* Subtext - only show in larger formats */}
+        {adSize.id !== 'banner' && subtext && (
+          <div className={`${classes.subtext} text-gray-700 ${classes.spacing} max-w-full mx-auto`}>
+            {subtext.split('\n').map((line, i) => (
+              <div key={i} className={i > 0 ? 'mt-2' : ''}>
+                {parseHighlightedText(line)}
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {/* CTA Button */}
+        {ctaText && (
+          <div className="flex justify-center">
+            <Button
+              size="lg"
+              className={`bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white ${classes.button} rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300`}
+            >
+              {ctaText}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Main AdBuilder Component
  */
 const AdBuilder = () => {
-  // ========== INTERFACE CONTROL STATE ==========
-  
-  /** Currently selected section (hero, problem, or solution) */
-  const [selectedSection, setSelectedSection] = useState('hero');
+  // ========== STATE ==========
   
   /** Currently selected ad size preset */
   const [selectedSize, setSelectedSize] = useState('square');
@@ -80,139 +233,62 @@ const AdBuilder = () => {
   /** Whether export mode is active (hides controls for clean screenshots) */
   const [isExportMode, setIsExportMode] = useState(false);
 
-  // ========== CONTENT STATE ==========
-  
-  /**
-   * Hero section content state
-   * Contains all editable text fields for the hero section including:
-   * - Main headline and highlighted text
-   * - Subheadings with highlight words
-   * - Call-to-action button text
-   */
-  const [heroContent, setHeroContent] = useState({
-    mainHeadline: 'Networking',
-    highlightedText: "doesn't have to suck.",
-    subHeadline1: 'Stop juggling messages, spreadsheets, post-it notes and',
-    highlight1: 'forgotten follow-ups.',
-    subHeadline2: 'Chumzee helps you',
-    highlight2: 'build momentum',
-    subHeadline3: 'and nurture',
-    highlight3: 'meaningful relationships.',
-    ctaText: 'Start building momentum'
+  /** Ad content that user can edit */
+  const [adContent, setAdContent] = useState({
+    headline: "Networking **doesn't have to suck.**",
+    subtext: `Stop juggling messages, spreadsheets, and **forgotten follow-ups**.
+Chumzee helps you **build momentum** and nurture
+**~meaningful relationships~**.`,
+    ctaText: "Start building momentum"
   });
 
-  /**
-   * Font size controls for hero section
-   * Allows users to adjust headline and subtext sizes independently
-   */
+  /** Font size controls for headline and subtext */
   const [fontSizes, setFontSizes] = useState({
-    heroHeadline: 'normal', // Options: small, normal, large, xl
-    heroSubtext: 'normal'   // Options: small, normal, large
-  });
-
-  /**
-   * Problem section content state
-   * Contains all editable text for problem section including main headline,
-   * highlighted text, sub-descriptions, and transitional text
-   */
-  const [problemContent, setProblemContent] = useState({
-    mainHeadline: 'Just applying to jobs',
-    highlightedText: 'is a dead end.',
-    subText1: 'You know you should be networking more.',
-    subText2: 'Building meaningful relationships shouldn\'t feel so',
-    highlight1: 'overwhelming and draining.',
-    transitionalText: 'Without structure and a plan, it\'s all just busywork.'
-  });
-
-  /**
-   * Solution section content state
-   * Contains all editable text for solution section including descriptions
-   * and multiple highlighted phrases
-   */
-  const [solutionContent, setSolutionContent] = useState({
-    mainHeadline: 'From networking chaos to career momentum.',
-    description: 'One organized system. Every interaction, note, and meeting',
-    highlight1: 'syncs automatically.',
-    highlight2: 'AI suggestions',
-    description2: 'and visual progress tracking turn networking from a daunting task into',
-    highlight3: 'simple daily wins',
-    description3: 'you can see and feel.'
+    headline: 'normal',  // Options: small, normal, large, xl
+    subtext: 'normal'    // Options: small, normal, large
   });
 
   // ========== COMPUTED VALUES ==========
   
-  /** 
-   * Get the current ad size configuration object
-   * Defaults to first size if selectedSize not found
-   */
+  /** Get the current ad size configuration object */
   const currentSize = adSizes.find(size => size.id === selectedSize) || adSizes[0];
 
   // ========== EVENT HANDLERS ==========
   
-  /**
-   * Toggle export mode on/off
-   * Export mode hides all controls for clean screenshot capture
-   */
+  /** Toggle export mode on/off */
   const handleExportMode = () => {
     setIsExportMode(!isExportMode);
   };
 
-  /**
-   * Render the appropriate editable section component based on current selection
-   * 
-   * @returns {JSX.Element|null} The selected section component with proper props
-   */
-  const renderSection = () => {
-    // Common props passed to all section components
-    const commonProps = {
-      isExportMode,    // Hide editing UI when in export mode
-      adSize: currentSize  // Current size configuration for responsive styling
-    };
+  /** Update ad content field */
+  const updateContent = (field: keyof typeof adContent, value: string) => {
+    setAdContent(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
-    switch (selectedSection) {
-      case 'hero':
-        return (
-          <EditableHero 
-            content={heroContent}
-            onChange={setHeroContent}
-            fontSizes={fontSizes}
-            {...commonProps}
-          />
-        );
-      case 'problem':
-        return (
-          <EditableProblem 
-            content={problemContent}
-            onChange={setProblemContent}
-            {...commonProps}
-          />
-        );
-      case 'solution':
-        return (
-          <EditableSolution 
-            content={solutionContent}
-            onChange={setSolutionContent}
-            {...commonProps}
-          />
-        );
-      default:
-        return null;
-    }
+  /** Update font size setting */
+  const updateFontSize = (type: keyof typeof fontSizes, size: string) => {
+    setFontSizes(prev => ({
+      ...prev,
+      [type]: size
+    }));
   };
 
   // ========== MAIN RENDER ==========
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Application Header with Title and Export Toggle */}
+      {/* Application Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Ad Builder</h1>
-            <p className="text-gray-600">Create marketing materials from your landing page sections</p>
+            <p className="text-gray-600">Create marketing materials with simple text editing</p>
           </div>
           <div className="flex items-center space-x-4">
-            {/* Export Mode Toggle - hides controls for clean screenshots */}
+            {/* Export Mode Toggle */}
             <Button 
               onClick={handleExportMode}
               variant={isExportMode ? "default" : "outline"}
@@ -225,7 +301,7 @@ const AdBuilder = () => {
         </div>
       </header>
 
-      {/* Main Content Area with Split Layout */}
+      {/* Main Content Area */}
       <div className="max-w-7xl mx-auto p-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           
@@ -233,31 +309,7 @@ const AdBuilder = () => {
           {!isExportMode && (
             <div className="lg:col-span-1 space-y-6">
               
-              {/* Section Selection Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Section</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Select value={selectedSection} onValueChange={setSelectedSection}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sections.map(section => (
-                        <SelectItem key={section.id} value={section.id}>
-                          <div>
-                            <div className="font-medium">{section.name}</div>
-                            <div className="text-sm text-gray-500">{section.description}</div>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </CardContent>
-              </Card>
-
-              {/* Ad Size Selection Card */}
+              {/* Ad Size Selection */}
               <Card>
                 <CardHeader>
                   <CardTitle>Ad Size</CardTitle>
@@ -277,43 +329,83 @@ const AdBuilder = () => {
                 </CardContent>
               </Card>
 
-              {/* Font Size Controls - Only show for Hero section */}
-              {selectedSection === 'hero' && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Font Sizes</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label htmlFor="headline-size" className="text-sm font-medium">Headline Size</Label>
-                      <Select value={fontSizes.heroHeadline} onValueChange={(value) => setFontSizes(prev => ({ ...prev, heroHeadline: value }))}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="small">Small</SelectItem>
-                          <SelectItem value="normal">Normal</SelectItem>
-                          <SelectItem value="large">Large</SelectItem>
-                          <SelectItem value="xl">Extra Large</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="subtext-size" className="text-sm font-medium">Subtext Size</Label>
-                      <Select value={fontSizes.heroSubtext} onValueChange={(value) => setFontSizes(prev => ({ ...prev, heroSubtext: value }))}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="small">Small</SelectItem>
-                          <SelectItem value="normal">Normal</SelectItem>
-                          <SelectItem value="large">Large</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              {/* Content Editing */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Content</CardTitle>
+                  <p className="text-sm text-gray-600">
+                    Use **text** for styling. See placeholders for examples.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="headline">Headline</Label>
+                    <Input
+                      id="headline"
+                      value={adContent.headline}
+                      onChange={(e) => updateContent('headline', e.target.value)}
+                      placeholder="e.g. Networking **doesn't suck.**"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="subtext">Subtext</Label>
+                    <Textarea
+                      id="subtext"
+                      value={adContent.subtext}
+                      onChange={(e) => updateContent('subtext', e.target.value)}
+                      placeholder="Enter supporting text... Use Enter for new lines"
+                      rows={4}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="cta">Call-to-Action Button</Label>
+                    <Input
+                      id="cta"
+                      value={adContent.ctaText}
+                      onChange={(e) => updateContent('ctaText', e.target.value)}
+                      placeholder="Enter button text..."
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Font Size Controls */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Font Sizes</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="headline-size" className="text-sm font-medium">Headline Size</Label>
+                    <Select value={fontSizes.headline} onValueChange={(value) => updateFontSize('headline', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="small">Small</SelectItem>
+                        <SelectItem value="normal">Normal</SelectItem>
+                        <SelectItem value="large">Large</SelectItem>
+                        <SelectItem value="xl">Extra Large</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="subtext-size" className="text-sm font-medium">Subtext Size</Label>
+                    <Select value={fontSizes.subtext} onValueChange={(value) => updateFontSize('subtext', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="small">Small</SelectItem>
+                        <SelectItem value="normal">Normal</SelectItem>
+                        <SelectItem value="large">Large</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Instructions */}
               <Card>
@@ -321,31 +413,36 @@ const AdBuilder = () => {
                   <CardTitle>Instructions</CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-gray-600 space-y-2">
-                  <p>1. Select a section and ad size</p>
-                  <p>2. Click text in the preview to edit</p>
-                  <p>3. Use "Export Mode" for clean screenshots</p>
-                  <p>4. Take screenshot with your preferred tool</p>
+                  <p>1. Select an ad size format</p>
+                  <p>2. Edit headline, subtext, and CTA text above</p>
+                  <p>3. Adjust font sizes as needed</p>
+                  <p>4. Use **text** for gradient/highlight, **~text~** to tilt</p>
+                  <p>5. Use Enter in subtext for line breaks</p>
+                  <p>6. Click "Export Mode" for clean screenshots</p>
                 </CardContent>
               </Card>
             </div>
           )}
 
-          {/* Right Panel - Live Preview Area */}
+          {/* Right Panel - Live Preview */}
           <div className={`${isExportMode ? 'col-span-1' : 'lg:col-span-3'} flex items-center justify-center`}>
-            
-            {/* Preview Container with Ad Dimensions */}
             <div className="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-gray-200">
               <div 
                 className="relative bg-white"
                 style={{
-                  width: currentSize.width,      // CSS width from ad size preset
-                  height: currentSize.height,    // CSS height from ad size preset
-                  minHeight: currentSize.height, // Ensure minimum height is maintained
-                  overflow: 'hidden'             // Prevent content overflow
+                  width: currentSize.width,
+                  height: currentSize.height,
+                  minHeight: currentSize.height,
+                  overflow: 'hidden'
                 }}
               >
-                {/* Render the selected section component with current content */}
-                {renderSection()}
+                <AdPreview
+                  headline={adContent.headline}
+                  subtext={adContent.subtext}
+                  ctaText={adContent.ctaText}
+                  adSize={currentSize}
+                  fontSizes={fontSizes}
+                />
               </div>
             </div>
           </div>
