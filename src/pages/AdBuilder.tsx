@@ -1,3 +1,23 @@
+/**
+ * Ad Builder - Landing Page Content to Marketing Materials Converter
+ * 
+ * This component creates an interface for converting landing page sections (Hero, Problem, Solution)
+ * into marketing materials of various sizes. It preserves all original styling (gradients, animations,
+ * typography) while making text content editable and adapting layouts for different ad formats.
+ * 
+ * Key Features:
+ * - Split-screen interface: controls on left, live preview on right
+ * - Section selector: choose between Hero, Problem, and Solution sections
+ * - Size presets: 7 different ad formats optimized for social media and web
+ * - Click-to-edit text: all text content is editable in real-time
+ * - Font size controls: adjustable headline and subtext sizing
+ * - Export mode: clean view for screenshots without editing controls
+ * - Responsive design: adapts content to fit each ad format perfectly
+ * 
+ * @author AI Assistant
+ * @version 1.0
+ */
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +29,14 @@ import EditableHero from "@/components/ads/EditableHero";
 import EditableProblem from "@/components/ads/EditableProblem";
 import EditableSolution from "@/components/ads/EditableSolution";
 
-// Ad size presets with dimensions optimized for different platforms
+/**
+ * Ad size presets with dimensions optimized for different platforms
+ * Each preset includes:
+ * - id: unique identifier for the preset
+ * - name: display name showing actual pixel dimensions
+ * - width/height: CSS dimensions for preview (scaled down from actual)
+ * - description: platforms and use cases for this size
+ */
 const adSizes = [
   { id: 'square', name: 'Square (1080x1080)', width: '500px', height: '500px', description: 'Instagram posts, Facebook posts' },
   { id: 'square-large', name: 'Large Square (1200x1200)', width: '550px', height: '550px', description: 'High-res Instagram, premium social posts' },
@@ -20,20 +47,48 @@ const adSizes = [
   { id: 'banner', name: 'Banner (728x90)', width: '728px', height: '90px', description: 'Web banners, headers' },
 ];
 
-// Section types that can be edited
+/**
+ * Section types that can be edited
+ * Each section corresponds to a component from the original landing page:
+ * - hero: Main value proposition with call-to-action button
+ * - problem: Pain points and challenges the product solves
+ * - solution: Features and benefits of the product
+ */
 const sections = [
   { id: 'hero', name: 'Hero Section', description: 'Main headline with call-to-action' },
   { id: 'problem', name: 'Problem Section', description: 'Pain points and challenges' },
   { id: 'solution', name: 'Solution Section', description: 'Features and benefits' },
 ];
 
+/**
+ * AdBuilder Component
+ * 
+ * Main component that orchestrates the ad building interface. Manages all state for
+ * section selection, content editing, size selection, and export functionality.
+ * 
+ * @returns {JSX.Element} The complete ad builder interface
+ */
 const AdBuilder = () => {
-  // State for controlling the interface
+  // ========== INTERFACE CONTROL STATE ==========
+  
+  /** Currently selected section (hero, problem, or solution) */
   const [selectedSection, setSelectedSection] = useState('hero');
+  
+  /** Currently selected ad size preset */
   const [selectedSize, setSelectedSize] = useState('square');
+  
+  /** Whether export mode is active (hides controls for clean screenshots) */
   const [isExportMode, setIsExportMode] = useState(false);
 
-  // State for editable content - Hero section
+  // ========== CONTENT STATE ==========
+  
+  /**
+   * Hero section content state
+   * Contains all editable text fields for the hero section including:
+   * - Main headline and highlighted text
+   * - Subheadings with highlight words
+   * - Call-to-action button text
+   */
   const [heroContent, setHeroContent] = useState({
     mainHeadline: 'Networking',
     highlightedText: "doesn't have to suck.",
@@ -46,13 +101,20 @@ const AdBuilder = () => {
     ctaText: 'Start building momentum'
   });
 
-  // State for font size controls
+  /**
+   * Font size controls for hero section
+   * Allows users to adjust headline and subtext sizes independently
+   */
   const [fontSizes, setFontSizes] = useState({
-    heroHeadline: 'normal', // small, normal, large, xl
-    heroSubtext: 'normal'
+    heroHeadline: 'normal', // Options: small, normal, large, xl
+    heroSubtext: 'normal'   // Options: small, normal, large
   });
 
-  // State for editable content - Problem section
+  /**
+   * Problem section content state
+   * Contains all editable text for problem section including main headline,
+   * highlighted text, sub-descriptions, and transitional text
+   */
   const [problemContent, setProblemContent] = useState({
     mainHeadline: 'Just applying to jobs',
     highlightedText: 'is a dead end.',
@@ -62,7 +124,11 @@ const AdBuilder = () => {
     transitionalText: 'Without structure and a plan, it\'s all just busywork.'
   });
 
-  // State for editable content - Solution section
+  /**
+   * Solution section content state
+   * Contains all editable text for solution section including descriptions
+   * and multiple highlighted phrases
+   */
   const [solutionContent, setSolutionContent] = useState({
     mainHeadline: 'From networking chaos to career momentum.',
     description: 'One organized system. Every interaction, note, and meeting',
@@ -73,19 +139,34 @@ const AdBuilder = () => {
     description3: 'you can see and feel.'
   });
 
-  // Get current ad size configuration
+  // ========== COMPUTED VALUES ==========
+  
+  /** 
+   * Get the current ad size configuration object
+   * Defaults to first size if selectedSize not found
+   */
   const currentSize = adSizes.find(size => size.id === selectedSize) || adSizes[0];
 
-  // Handle export mode for clean screenshots
+  // ========== EVENT HANDLERS ==========
+  
+  /**
+   * Toggle export mode on/off
+   * Export mode hides all controls for clean screenshot capture
+   */
   const handleExportMode = () => {
     setIsExportMode(!isExportMode);
   };
 
-  // Render the selected section component
+  /**
+   * Render the appropriate editable section component based on current selection
+   * 
+   * @returns {JSX.Element|null} The selected section component with proper props
+   */
   const renderSection = () => {
+    // Common props passed to all section components
     const commonProps = {
-      isExportMode,
-      adSize: currentSize
+      isExportMode,    // Hide editing UI when in export mode
+      adSize: currentSize  // Current size configuration for responsive styling
     };
 
     switch (selectedSection) {
@@ -119,9 +200,11 @@ const AdBuilder = () => {
     }
   };
 
+  // ========== MAIN RENDER ==========
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Application Header with Title and Export Toggle */}
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
@@ -129,6 +212,7 @@ const AdBuilder = () => {
             <p className="text-gray-600">Create marketing materials from your landing page sections</p>
           </div>
           <div className="flex items-center space-x-4">
+            {/* Export Mode Toggle - hides controls for clean screenshots */}
             <Button 
               onClick={handleExportMode}
               variant={isExportMode ? "default" : "outline"}
@@ -141,12 +225,15 @@ const AdBuilder = () => {
         </div>
       </header>
 
+      {/* Main Content Area with Split Layout */}
       <div className="max-w-7xl mx-auto p-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Panel - Controls */}
+          
+          {/* Left Panel - Controls (hidden in export mode) */}
           {!isExportMode && (
             <div className="lg:col-span-1 space-y-6">
-              {/* Section Selector */}
+              
+              {/* Section Selection Card */}
               <Card>
                 <CardHeader>
                   <CardTitle>Section</CardTitle>
@@ -170,7 +257,7 @@ const AdBuilder = () => {
                 </CardContent>
               </Card>
 
-              {/* Size Selector */}
+              {/* Ad Size Selection Card */}
               <Card>
                 <CardHeader>
                   <CardTitle>Ad Size</CardTitle>
@@ -243,18 +330,21 @@ const AdBuilder = () => {
             </div>
           )}
 
-          {/* Right Panel - Preview */}
+          {/* Right Panel - Live Preview Area */}
           <div className={`${isExportMode ? 'col-span-1' : 'lg:col-span-3'} flex items-center justify-center`}>
+            
+            {/* Preview Container with Ad Dimensions */}
             <div className="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-gray-200">
               <div 
                 className="relative bg-white"
                 style={{
-                  width: currentSize.width,
-                  height: currentSize.height,
-                  minHeight: currentSize.height,
-                  overflow: 'hidden'
+                  width: currentSize.width,      // CSS width from ad size preset
+                  height: currentSize.height,    // CSS height from ad size preset
+                  minHeight: currentSize.height, // Ensure minimum height is maintained
+                  overflow: 'hidden'             // Prevent content overflow
                 }}
               >
+                {/* Render the selected section component with current content */}
                 {renderSection()}
               </div>
             </div>

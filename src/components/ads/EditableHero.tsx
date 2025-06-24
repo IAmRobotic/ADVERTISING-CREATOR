@@ -1,46 +1,106 @@
+/**
+ * Editable Hero Component
+ * 
+ * This component renders an editable version of the original Hero landing page section.
+ * It preserves all visual styling (gradients, animations, typography) while making
+ * text content editable through click-to-edit functionality.
+ * 
+ * Key Features:
+ * - Click-to-edit text: Any text can be clicked to edit inline
+ * - Responsive sizing: Adapts typography and layout for different ad sizes
+ * - Font size controls: User-controllable headline and subtext sizing
+ * - Gradient preservation: Maintains original purple-to-teal gradient styling
+ * - CTA button: Editable call-to-action with gradient animation
+ * - Export mode: Hides editing indicators for clean screenshots
+ * 
+ * The component handles 7 different ad size formats, automatically adjusting:
+ * - Font sizes and spacing
+ * - Container padding
+ * - Button sizing
+ * - Content visibility (some elements hidden in banner format)
+ * 
+ * @author AI Assistant
+ * @version 1.0
+ */
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight } from "lucide-react";
 
-// Type definitions for props
+// ========== TYPE DEFINITIONS ==========
+
+/**
+ * Content structure for the Hero section
+ * All properties are editable text fields
+ */
 interface HeroContent {
-  mainHeadline: string;
-  highlightedText: string;
-  subHeadline1: string;
-  highlight1: string;
-  subHeadline2: string;
-  highlight2: string;
-  subHeadline3: string;
-  highlight3: string;
-  ctaText: string;
+  mainHeadline: string;      // "Networking" - first part of headline
+  highlightedText: string;   // "doesn't have to suck." - gradient highlighted part
+  subHeadline1: string;      // First line of subtitle
+  highlight1: string;        // First yellow highlighted phrase
+  subHeadline2: string;      // Second line of subtitle
+  highlight2: string;        // Second yellow highlighted phrase  
+  subHeadline3: string;      // Third line of subtitle
+  highlight3: string;        // Third yellow highlighted phrase (rotated)
+  ctaText: string;          // Call-to-action button text
 }
 
+/**
+ * Ad size configuration object
+ * Defines dimensions and metadata for each ad format
+ */
 interface AdSize {
-  id: string;
-  name: string;
-  width: string;
-  height: string;
+  id: string;          // Unique identifier (e.g., 'square', 'landscape')
+  name: string;        // Display name with dimensions
+  width: string;       // CSS width for preview
+  height: string;      // CSS height for preview
 }
 
+/**
+ * Font size control settings
+ * User-configurable size options for different text elements
+ */
 interface FontSizes {
-  heroHeadline: string;
-  heroSubtext: string;
+  heroHeadline: string;  // 'small' | 'normal' | 'large' | 'xl'
+  heroSubtext: string;   // 'small' | 'normal' | 'large'
 }
 
+/**
+ * Props interface for EditableHero component
+ */
 interface EditableHeroProps {
-  content: HeroContent;
-  onChange: (content: HeroContent) => void;
-  isExportMode: boolean;
-  adSize: AdSize;
-  fontSizes: FontSizes;
+  content: HeroContent;                           // Current text content
+  onChange: (content: HeroContent) => void;       // Content update handler
+  isExportMode: boolean;                          // Hide editing UI when true
+  adSize: AdSize;                                // Current ad size configuration
+  fontSizes: FontSizes;                          // User font size preferences
 }
 
+/**
+ * EditableHero Component Implementation
+ * 
+ * @param props - Component props containing content, handlers, and configuration
+ * @returns Rendered hero section with editable text functionality
+ */
 const EditableHero: React.FC<EditableHeroProps> = ({ content, onChange, isExportMode, adSize, fontSizes }) => {
-  // State for tracking which field is being edited
+  
+  // ========== COMPONENT STATE ==========
+  
+  /** 
+   * Track which text field is currently being edited
+   * null = no field being edited, string = field key being edited
+   */
   const [editingField, setEditingField] = useState<string | null>(null);
 
-  // Handle text updates
+  // ========== EVENT HANDLERS ==========
+
+  /**
+   * Update content for a specific field
+   * 
+   * @param field - The content field to update
+   * @param value - New value for the field
+   */
   const updateContent = (field: keyof HeroContent, value: string) => {
     onChange({
       ...content,
@@ -48,26 +108,48 @@ const EditableHero: React.FC<EditableHeroProps> = ({ content, onChange, isExport
     });
   };
 
-  // Handle click to edit
+  /**
+   * Start editing a specific field
+   * Only works when not in export mode
+   * 
+   * @param field - The field to start editing
+   */
   const handleEdit = (field: string) => {
     if (!isExportMode) {
       setEditingField(field);
     }
   };
 
-  // Handle save (when user clicks away or presses Enter)
+  /**
+   * Stop editing current field
+   * Called when user clicks away or presses Enter
+   */
   const handleSave = () => {
     setEditingField(null);
   };
 
-  // Handle Enter key press to save
+  /**
+   * Handle keyboard shortcuts while editing
+   * Enter key saves the current edit
+   * 
+   * @param e - Keyboard event
+   */
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSave();
     }
   };
 
-  // Render editable text element
+  // ========== RENDERING HELPERS ==========
+
+  /**
+   * Render an editable text element that switches between display and edit modes
+   * 
+   * @param field - Content field key to render
+   * @param className - CSS classes to apply
+   * @param placeholder - Placeholder text when field is empty
+   * @returns JSX element that's either editable input or clickable text
+   */
   const renderEditableText = (
     field: keyof HeroContent, 
     className: string, 
@@ -76,6 +158,7 @@ const EditableHero: React.FC<EditableHeroProps> = ({ content, onChange, isExport
     const isEditing = editingField === field;
     const value = content[field];
 
+    // Render input field when editing
     if (isEditing) {
       return (
         <Input
@@ -90,6 +173,7 @@ const EditableHero: React.FC<EditableHeroProps> = ({ content, onChange, isExport
       );
     }
 
+    // Render clickable text when not editing
     return (
       <span
         className={`${className} ${!isExportMode ? 'cursor-pointer hover:bg-blue-50 rounded px-1' : ''}`}
@@ -101,19 +185,29 @@ const EditableHero: React.FC<EditableHeroProps> = ({ content, onChange, isExport
     );
   };
 
-  // Get font size classes based on user selection
+  /**
+   * Get font size classes based on user selection and text type
+   * 
+   * Maps user-friendly size names to Tailwind responsive font classes.
+   * Falls back to baseSize if user selection is invalid.
+   * 
+   * @param type - Whether this is for headline or subtext
+   * @param baseSize - Default size classes to use as fallback
+   * @returns Tailwind CSS classes for the specified font size
+   */
   const getFontSizeClasses = (type: 'headline' | 'subtext', baseSize: string) => {
+    /** Mapping of user size preferences to Tailwind responsive classes */
     const sizeMap = {
       headline: {
-        small: 'text-2xl sm:text-3xl md:text-4xl',
-        normal: 'text-3xl sm:text-4xl md:text-5xl',
-        large: 'text-4xl sm:text-5xl md:text-6xl',
-        xl: 'text-5xl sm:text-6xl md:text-7xl'
+        small: 'text-2xl sm:text-3xl md:text-4xl',           // Compact but readable
+        normal: 'text-3xl sm:text-4xl md:text-5xl',          // Standard size
+        large: 'text-4xl sm:text-5xl md:text-6xl',           // Bold impact
+        xl: 'text-5xl sm:text-6xl md:text-7xl'               // Maximum impact
       },
       subtext: {
-        small: 'text-sm sm:text-base',
-        normal: 'text-base sm:text-lg md:text-xl',
-        large: 'text-lg sm:text-xl md:text-2xl'
+        small: 'text-sm sm:text-base',                       // Minimal space usage
+        normal: 'text-base sm:text-lg md:text-xl',           // Good readability
+        large: 'text-lg sm:text-xl md:text-2xl'              // High emphasis
       }
     };
 
@@ -121,50 +215,59 @@ const EditableHero: React.FC<EditableHeroProps> = ({ content, onChange, isExport
     return sizeMap[type][userSize as keyof typeof sizeMap[typeof type]] || baseSize;
   };
 
-  // Dynamic sizing based on ad format
+  /**
+   * Calculate responsive classes based on the current ad format
+   * 
+   * Each ad size gets different typography, spacing, and button sizing
+   * to optimize readability and visual impact for that format.
+   * 
+   * @returns Object containing CSS classes for different UI elements
+   */
   const getResponsiveClasses = () => {
-    const isSquare = adSize.id === 'square';
-    const isLandscape = adSize.id === 'landscape';
-    const isPortrait = adSize.id === 'portrait';
     const isBanner = adSize.id === 'banner';
+    const isPortrait = adSize.id === 'portrait';
+    const isLandscape = adSize.id === 'landscape' || adSize.id === 'linkedin-sponsored';
 
+    // Banner format: Minimal height, compact everything
     if (isBanner) {
       return {
-        container: 'p-2',
-        heading: getFontSizeClasses('headline', 'text-lg leading-tight'),
-        subtext: getFontSizeClasses('subtext', 'text-xs leading-tight'),
-        button: 'px-2 py-1 text-xs',
-        spacing: 'mb-1'
+        container: 'p-2',                                              // Minimal padding
+        heading: getFontSizeClasses('headline', 'text-lg leading-tight'),  // Small but readable
+        subtext: getFontSizeClasses('subtext', 'text-xs leading-tight'),   // Minimal subtext
+        button: 'px-2 py-1 text-xs',                                   // Tiny button
+        spacing: 'mb-1'                                                // Minimal spacing
       };
     }
 
+    // Portrait format: Tall and narrow, optimized for mobile viewing
     if (isPortrait) {
       return {
-        container: 'p-4',
-        heading: getFontSizeClasses('headline', 'text-2xl sm:text-3xl leading-tight'),
-        subtext: getFontSizeClasses('subtext', 'text-sm sm:text-base leading-relaxed'),
-        button: 'px-4 py-2 text-sm',
-        spacing: 'mb-3'
+        container: 'p-4',                                                        // Moderate padding
+        heading: getFontSizeClasses('headline', 'text-2xl sm:text-3xl leading-tight'),  // Mobile-friendly size
+        subtext: getFontSizeClasses('subtext', 'text-sm sm:text-base leading-relaxed'), // Readable on mobile
+        button: 'px-4 py-2 text-sm',                                             // Finger-friendly button
+        spacing: 'mb-3'                                                          // Tight vertical spacing
       };
     }
 
-    if (isLandscape || adSize.id === 'linkedin-sponsored') {
+    // Landscape formats: Wide social media headers and covers
+    if (isLandscape) {
       return {
-        container: 'p-4',
-        heading: getFontSizeClasses('headline', 'text-3xl sm:text-4xl md:text-5xl leading-tight'),
-        subtext: getFontSizeClasses('subtext', 'text-base sm:text-lg leading-relaxed'),
-        button: 'px-4 py-2 text-base',
-        spacing: 'mb-4'
+        container: 'p-4',                                                               // Moderate padding
+        heading: getFontSizeClasses('headline', 'text-3xl sm:text-4xl md:text-5xl leading-tight'), // Good impact
+        subtext: getFontSizeClasses('subtext', 'text-base sm:text-lg leading-relaxed'),            // Readable
+        button: 'px-4 py-2 text-base',                                                  // Standard button
+        spacing: 'mb-4'                                                                 // Good spacing
       };
     }
 
-    // Square and other formats (default) - match original landing page proportions
+    // Square and other formats (default): Maximum impact like original landing page
     return {
-      container: 'p-6',
-      heading: getFontSizeClasses('headline', 'text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-tight'),
-      subtext: getFontSizeClasses('subtext', 'text-base sm:text-lg md:text-xl leading-relaxed'),
-      button: 'px-6 py-3 text-lg',
-      spacing: 'mb-6'
+      container: 'p-6',                                                                        // Generous padding
+      heading: getFontSizeClasses('headline', 'text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-tight'), // Maximum impact
+      subtext: getFontSizeClasses('subtext', 'text-base sm:text-lg md:text-xl leading-relaxed'),             // Excellent readability
+      button: 'px-6 py-3 text-lg',                                                             // Large, prominent button
+      spacing: 'mb-6'                                                                          // Generous spacing
     };
   };
 

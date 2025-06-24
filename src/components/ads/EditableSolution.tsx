@@ -1,38 +1,89 @@
+/**
+ * Editable Solution Section Component
+ * 
+ * This component renders an editable version of the original Solution landing page section.
+ * It presents the product's features and benefits as solutions to previously stated problems,
+ * with dynamic content highlighting and feature icons that adapt to different ad formats.
+ * 
+ * Key Features:
+ * - Click-to-edit text: All solution descriptions and highlights are editable
+ * - Multi-highlight system: Different colored highlights for different benefit types
+ * - Feature icons: Visual representation of key solution features (follow-ups, centralization, AI, progress)
+ * - Responsive content: Shows/hides elements based on available space in ad format
+ * - Export mode: Clean view without editing indicators
+ * 
+ * Layout Variations by Ad Size:
+ * - Square: Full layout with feature icons and complete description highlighting
+ * - Portrait: Feature icons with simplified description
+ * - Landscape: Full description highlighting without feature icons
+ * - Banner: Minimal single-highlight description only
+ * 
+ * @author AI Assistant
+ * @version 1.0
+ */
+
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Bell, MessageSquare, Lightbulb, TrendingUp } from "lucide-react";
 
-// Type definitions for props
+// ========== TYPE DEFINITIONS ==========
+
+/**
+ * Content structure for the Solution section
+ * Contains segmented description with multiple highlight opportunities
+ */
 interface SolutionContent {
-  mainHeadline: string;
-  description: string;
-  highlight1: string;
-  highlight2: string;
-  description2: string;
-  highlight3: string;
-  description3: string;
+  mainHeadline: string;    // "From networking chaos to career momentum." - main value proposition
+  description: string;     // First part of solution description
+  highlight1: string;      // First benefit highlight (typically yellow - automation)
+  highlight2: string;      // Second benefit highlight (typically green - AI features)
+  description2: string;    // Middle part of solution description
+  highlight3: string;      // Third benefit highlight (typically purple - outcomes)
+  description3: string;    // Final part of solution description
 }
 
+/**
+ * Ad size configuration object
+ * Determines which UI elements and content to show/hide
+ */
 interface AdSize {
-  id: string;
-  name: string;
-  width: string;
-  height: string;
+  id: string;          // Unique identifier for the ad size
+  name: string;        // Display name with actual pixel dimensions
+  width: string;       // CSS width for preview rendering
+  height: string;      // CSS height for preview rendering
 }
 
+/**
+ * Props interface for EditableSolution component
+ */
 interface EditableSolutionProps {
-  content: SolutionContent;
-  onChange: (content: SolutionContent) => void;
-  isExportMode: boolean;
-  adSize: AdSize;
+  content: SolutionContent;                           // Current solution text content
+  onChange: (content: SolutionContent) => void;       // Content update handler
+  isExportMode: boolean;                              // Hide editing UI when true
+  adSize: AdSize;                                    // Current ad size configuration
 }
 
+/**
+ * EditableSolution Component Implementation
+ * 
+ * @param props - Component props containing content, handlers, and configuration
+ * @returns Rendered solution section with editable text and feature icons
+ */
 const EditableSolution: React.FC<EditableSolutionProps> = ({ content, onChange, isExportMode, adSize }) => {
-  // State for tracking which field is being edited
+  
+  // ========== COMPONENT STATE ==========
+  
+  /** Track which text field is currently being edited (null = none, string = field key) */
   const [editingField, setEditingField] = useState<string | null>(null);
 
-  // Handle text updates
+  // ========== EVENT HANDLERS ==========
+
+  /**
+   * Update content for a specific field
+   * @param field - The content field to update  
+   * @param value - New value for the field
+   */
   const updateContent = (field: keyof SolutionContent, value: string) => {
     onChange({
       ...content,
@@ -40,19 +91,27 @@ const EditableSolution: React.FC<EditableSolutionProps> = ({ content, onChange, 
     });
   };
 
-  // Handle click to edit
+  /**
+   * Start editing a specific field (only when not in export mode)
+   * @param field - The field to start editing
+   */
   const handleEdit = (field: string) => {
     if (!isExportMode) {
       setEditingField(field);
     }
   };
 
-  // Handle save (when user clicks away or presses Enter)
+  /**
+   * Stop editing current field (called on blur or Enter key)
+   */
   const handleSave = () => {
     setEditingField(null);
   };
 
-  // Handle Enter key press to save
+  /**
+   * Handle keyboard shortcuts while editing (Enter to save)
+   * @param e - Keyboard event
+   */
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSave();
@@ -95,65 +154,79 @@ const EditableSolution: React.FC<EditableSolutionProps> = ({ content, onChange, 
     );
   };
 
-  // Dynamic sizing based on ad format
-  const getResponsiveClasses = () => {
-    const isSquare = adSize.id === 'square';
-    const isLandscape = adSize.id === 'landscape';
-    const isPortrait = adSize.id === 'portrait';
-    const isBanner = adSize.id === 'banner';
+  // ========== LAYOUT CALCULATIONS ==========
 
+  /**
+   * Calculate responsive styling based on current ad format
+   * Determines which UI elements to show/hide and how to size them
+   * 
+   * @returns Object with styling classes and visibility flags
+   */
+  const getResponsiveClasses = () => {
+    const isBanner = adSize.id === 'banner';
+    const isPortrait = adSize.id === 'portrait';
+    const isLandscape = adSize.id === 'landscape' || adSize.id === 'linkedin-sponsored';
+
+    // Banner: Minimal space, text-only approach
     if (isBanner) {
       return {
         container: 'p-2',
         heading: 'text-sm font-bold leading-tight',
         subtext: 'text-xs leading-tight',
         spacing: 'mb-1',
-        showFeatures: false,
-        showFullDescription: false
+        showFeatures: false,        // No space for icons
+        showFullDescription: false  // Simplified text only
       };
     }
 
+    // Portrait: Mobile-optimized with key features shown
     if (isPortrait) {
       return {
         container: 'p-4',
         heading: 'text-lg font-bold leading-tight',
         subtext: 'text-sm leading-relaxed',
         spacing: 'mb-2',
-        showFeatures: true,
-        showFullDescription: false
+        showFeatures: true,         // Show feature icons for engagement
+        showFullDescription: false  // Simplified description for space
       };
     }
 
+    // Landscape: Wide format optimized for description highlighting
     if (isLandscape) {
       return {
         container: 'p-4',
         heading: 'text-xl font-bold leading-tight',
         subtext: 'text-sm leading-relaxed',
         spacing: 'mb-2',
-        showFeatures: false,
-        showFullDescription: true
+        showFeatures: false,        // Focus on text content
+        showFullDescription: true   // Full highlighted description
       };
     }
 
-    // Square (default)
+    // Square and other formats: Maximum impact with all elements
     return {
       container: 'p-6',
       heading: 'text-2xl font-bold leading-tight',
       subtext: 'text-base leading-relaxed',
       spacing: 'mb-3',
-      showFeatures: true,
-      showFullDescription: true
+      showFeatures: true,         // Show all feature icons
+      showFullDescription: true   // Complete description with all highlights
     };
   };
 
   const classes = getResponsiveClasses();
 
-  // Solution features for icons
+  // ========== STATIC DATA ==========
+
+  /**
+   * Solution feature icons and metadata
+   * Each represents a key product capability with visual branding
+   */
   const solutions = [
-    { icon: Bell, title: "Follow-ups", iconColor: "text-purple-600" },
-    { icon: MessageSquare, title: "Centralize", iconColor: "text-teal-600" },
-    { icon: Lightbulb, title: "AI Suggestions", iconColor: "text-orange-600" },
-    { icon: TrendingUp, title: "Progress", iconColor: "text-green-600" }
+    { icon: Bell, title: "Follow-ups", iconColor: "text-purple-600" },      // Notification/reminder features
+    { icon: MessageSquare, title: "Centralize", iconColor: "text-teal-600" }, // Communication consolidation
+    { icon: Lightbulb, title: "AI Suggestions", iconColor: "text-orange-600" }, // AI-powered insights
+    { icon: TrendingUp, title: "Progress", iconColor: "text-green-600" }    // Analytics and tracking
   ];
 
   return (

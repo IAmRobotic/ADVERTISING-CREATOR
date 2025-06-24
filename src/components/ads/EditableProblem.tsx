@@ -1,36 +1,86 @@
+/**
+ * Editable Problem Section Component
+ * 
+ * This component renders an editable version of the original Problem landing page section.
+ * It focuses on presenting pain points and challenges that the product solves, with
+ * highlighting and visual elements that adapt to different ad formats.
+ * 
+ * Key Features:
+ * - Click-to-edit text: All problem statements and highlights are editable
+ * - Responsive layout: Adapts content visibility and sizing for different ad formats
+ * - Visual elements: Problem icons, handwritten underlines, and gradient highlights
+ * - Export mode: Hides editing indicators for clean screenshots
+ * - Multi-format support: Optimizes content for banner, portrait, landscape, and square formats
+ * 
+ * Layout Variations by Ad Size:
+ * - Square: Full layout with problem icons and all visual elements
+ * - Landscape/Portrait: Text-focused with transitional elements
+ * - Banner: Minimal text only, maximum readability in limited space
+ * 
+ * @author AI Assistant
+ * @version 1.0
+ */
+
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-// Type definitions for props
+// ========== TYPE DEFINITIONS ==========
+
+/**
+ * Content structure for the Problem section
+ * All properties represent editable text fields that highlight pain points
+ */
 interface ProblemContent {
-  mainHeadline: string;
-  highlightedText: string;
-  subText1: string;
-  subText2: string;
-  highlight1: string;
-  transitionalText: string;
+  mainHeadline: string;      // "Just applying to jobs" - main problem statement
+  highlightedText: string;   // "is a dead end." - gradient highlighted conclusion
+  subText1: string;          // First supporting statement about networking
+  subText2: string;          // Second statement leading to highlighted pain point
+  highlight1: string;        // Yellow highlighted pain point phrase
+  transitionalText: string;  // Transitional statement bridging to solution
 }
 
+/**
+ * Ad size configuration object
+ * Defines dimensions and layout behavior for each ad format
+ */
 interface AdSize {
-  id: string;
-  name: string;
-  width: string;
-  height: string;
+  id: string;          // Unique identifier for the ad size
+  name: string;        // Display name with dimensions
+  width: string;       // CSS width for preview container
+  height: string;      // CSS height for preview container
 }
 
+/**
+ * Props interface for EditableProblem component
+ */
 interface EditableProblemProps {
-  content: ProblemContent;
-  onChange: (content: ProblemContent) => void;
-  isExportMode: boolean;
-  adSize: AdSize;
+  content: ProblemContent;                           // Current problem text content
+  onChange: (content: ProblemContent) => void;       // Content update handler
+  isExportMode: boolean;                            // Hide editing UI when true
+  adSize: AdSize;                                  // Current ad size configuration
 }
 
+/**
+ * EditableProblem Component Implementation
+ * 
+ * @param props - Component props containing content, handlers, and configuration
+ * @returns Rendered problem section with editable text functionality
+ */
 const EditableProblem: React.FC<EditableProblemProps> = ({ content, onChange, isExportMode, adSize }) => {
-  // State for tracking which field is being edited
+  
+  // ========== COMPONENT STATE ==========
+  
+  /** Track which text field is currently being edited (null = none, string = field key) */
   const [editingField, setEditingField] = useState<string | null>(null);
 
-  // Handle text updates
+  // ========== EVENT HANDLERS ==========
+
+  /**
+   * Update content for a specific field
+   * @param field - The content field to update
+   * @param value - New value for the field
+   */
   const updateContent = (field: keyof ProblemContent, value: string) => {
     onChange({
       ...content,
@@ -38,19 +88,27 @@ const EditableProblem: React.FC<EditableProblemProps> = ({ content, onChange, is
     });
   };
 
-  // Handle click to edit
+  /**
+   * Start editing a specific field (only when not in export mode)
+   * @param field - The field to start editing
+   */
   const handleEdit = (field: string) => {
     if (!isExportMode) {
       setEditingField(field);
     }
   };
 
-  // Handle save (when user clicks away or presses Enter)
+  /**
+   * Stop editing current field (called on blur or Enter key)
+   */
   const handleSave = () => {
     setEditingField(null);
   };
 
-  // Handle Enter key press to save
+  /**
+   * Handle keyboard shortcuts while editing (Enter to save)
+   * @param e - Keyboard event
+   */
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSave();
