@@ -10,13 +10,14 @@
  * - Text input boxes: Simple headline, subtext, and CTA editing above preview
  * - Size presets: 7 different ad formats optimized for social media and web
  * - Font size controls: Adjustable sizing for headline, subtext, and button text
+ * - Gradient saturation & brightness sliders: Control the vividness and lightness of the gradient background
  * - Markdown-style highlighting: **text** for gradient (headline) or highlight (subtext)
  * - Manual line breaks: Use Enter in subtext field to control line layout
  * - Export mode: clean view for screenshots without editing controls
  * - Responsive design: adapts content to fit each ad format perfectly
  * 
  * @author AI Assistant
- * @version 2.5
+ * @version 2.7
  */
 
 import React, { useState } from 'react';
@@ -27,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { Camera, ArrowRight } from "lucide-react";
 
 /**
@@ -103,9 +105,11 @@ interface AdPreviewProps {
   ctaText: string;
   adSize: { id: string; width: string; height: string };
   fontSizes: { headline: string; subtext: string; cta: string };
+  gradientSaturation: number;
+  gradientBrightness: number;
 }
 
-const AdPreview: React.FC<AdPreviewProps> = ({ headline, subtext, ctaText, adSize, fontSizes }) => {
+const AdPreview: React.FC<AdPreviewProps> = ({ headline, subtext, ctaText, adSize, fontSizes, gradientSaturation, gradientBrightness }) => {
   
   /**
    * Get font size classes based on user selection and text type
@@ -184,14 +188,15 @@ const AdPreview: React.FC<AdPreviewProps> = ({ headline, subtext, ctaText, adSiz
   const classes = getResponsiveClasses();
 
   return (
-    <div className={`relative ${classes.container} overflow-hidden h-full flex flex-col justify-center bg-gradient-to-br from-purple-50 via-white to-teal-50`}>
-      {/* Subtle decorative background pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-4 left-4 w-8 h-8 bg-purple-200 rounded-full"></div>
-        <div className="absolute bottom-6 right-6 w-6 h-6 bg-teal-200 rounded-full"></div>
-        <div className="absolute top-1/3 right-8 w-4 h-4 bg-yellow-200 rounded-full"></div>
-      </div>
-      
+    <div className={`relative ${classes.container} overflow-hidden h-full flex flex-col justify-center`}>
+      {/* Gradient background with adjustable saturation and brightness */}
+      <div
+        className="absolute inset-0 z-0 bg-gradient-to-br from-purple-50 via-white to-teal-50"
+        style={{
+          filter: `saturate(${gradientSaturation}%) brightness(${gradientBrightness}%)`,
+          pointerEvents: 'none',
+        }}
+      />
       <div className="text-center relative z-10">
         {/* Main Headline */}
         <h1 className={`${classes.heading} text-indigo-800 ${classes.spacing}`}>
@@ -253,6 +258,10 @@ Chumzee helps you **build momentum** and nurture
     subtext: 'normal',   // Options: small, normal, large
     cta: 'normal'        // Options: small, normal, large
   });
+
+  /** Controls the gradient background's saturation and brightness */
+  const [gradientSaturation, setGradientSaturation] = useState(100);
+  const [gradientBrightness, setGradientBrightness] = useState(100);
 
   // ========== COMPUTED VALUES ==========
   
@@ -426,6 +435,37 @@ Chumzee helps you **build momentum** and nurture
                 </CardContent>
               </Card>
 
+              {/* Background Controls */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Background</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Label htmlFor="bg-saturation" className="text-sm font-medium">Gradient Saturation</Label>
+                  <Slider
+                    id="bg-saturation"
+                    min={0}
+                    max={200}
+                    step={5}
+                    value={[gradientSaturation]}
+                    onValueChange={(value) => setGradientSaturation(value[0])}
+                    className="mt-2"
+                  />
+                  <p className="text-sm text-gray-500 text-center mt-1">{gradientSaturation}%</p>
+                  <Label htmlFor="bg-brightness" className="text-sm font-medium mt-4 block">Gradient Brightness</Label>
+                  <Slider
+                    id="bg-brightness"
+                    min={0}
+                    max={200}
+                    step={5}
+                    value={[gradientBrightness]}
+                    onValueChange={(value) => setGradientBrightness(value[0])}
+                    className="mt-2"
+                  />
+                  <p className="text-sm text-gray-500 text-center mt-1">{gradientBrightness}%</p>
+                </CardContent>
+              </Card>
+
               {/* Instructions */}
               <Card>
                 <CardHeader>
@@ -434,7 +474,7 @@ Chumzee helps you **build momentum** and nurture
                 <CardContent className="text-sm text-gray-600 space-y-2">
                   <p>1. Select an ad size format</p>
                   <p>2. Edit headline, subtext, and CTA text above</p>
-                  <p>3. Adjust font sizes as needed</p>
+                  <p>3. Adjust font sizes and gradient background</p>
                   <p>4. Use **text** for gradient/highlight, **~text~** to tilt</p>
                   <p>5. Use Enter in subtext for line breaks</p>
                   <p>6. Click "Export Mode" for clean screenshots</p>
@@ -461,6 +501,8 @@ Chumzee helps you **build momentum** and nurture
                   ctaText={adContent.ctaText}
                   adSize={currentSize}
                   fontSizes={fontSizes}
+                  gradientSaturation={gradientSaturation}
+                  gradientBrightness={gradientBrightness}
                 />
               </div>
             </div>
