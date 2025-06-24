@@ -1,0 +1,16 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+--
+description: "Instructs the AI to add detailed comments to generated React code."
+alwaysApply: true
+---
+
+# Code Generation Guidelines
+
+1.  **Add Explanatory Comments**: For any non-obvious block of JSX or JavaScript logic, add a comment explaining its purpose.
+2.  **Explain Props**: For each component, add comments explaining what each prop is for.
+3.  **Document State Variables**: When initializing state with `useState`, add a comment to explain what the state variable tracks.
+
