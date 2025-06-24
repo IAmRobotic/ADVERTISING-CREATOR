@@ -145,7 +145,13 @@ const EditableHero: React.FC<EditableHeroProps> = ({ content, onChange, isExport
   const classes = getResponsiveClasses();
 
   return (
-    <div className={`relative ${classes.container} overflow-hidden h-full flex flex-col justify-center`}>
+    <div className={`relative ${classes.container} overflow-hidden h-full flex flex-col justify-center bg-gradient-to-br from-purple-50 via-white to-teal-50`}>
+      {/* Subtle decorative background pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-4 left-4 w-8 h-8 bg-purple-200 rounded-full"></div>
+        <div className="absolute bottom-6 right-6 w-6 h-6 bg-teal-200 rounded-full"></div>
+        <div className="absolute top-1/3 right-8 w-4 h-4 bg-yellow-200 rounded-full"></div>
+      </div>
       <div className="text-center">
         {/* Main Headline */}
         <h1 className={`${classes.heading} text-gray-900 ${classes.spacing}`}>

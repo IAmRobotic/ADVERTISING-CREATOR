@@ -147,7 +147,12 @@ const EditableProblem: React.FC<EditableProblemProps> = ({ content, onChange, is
   const classes = getResponsiveClasses();
 
   return (
-    <div className={`relative ${classes.container} overflow-hidden h-full flex flex-col justify-center`}>
+    <div className={`relative ${classes.container} overflow-hidden h-full flex flex-col justify-center bg-gradient-to-br from-gray-50 via-purple-50 to-gray-100`}>
+      {/* Subtle decorative background pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-6 right-4 w-12 h-12 bg-red-200 rounded-full"></div>
+        <div className="absolute bottom-4 left-6 w-8 h-8 bg-orange-200 rounded-full"></div>
+      </div>
       <div className="text-center">
         {/* Main Headline */}
         <h2 className={`${classes.heading} text-gray-900 ${classes.spacing}`}>

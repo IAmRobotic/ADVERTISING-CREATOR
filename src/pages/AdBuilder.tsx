@@ -12,9 +12,11 @@ import EditableSolution from "@/components/ads/EditableSolution";
 // Ad size presets with dimensions optimized for different platforms
 const adSizes = [
   { id: 'square', name: 'Square (1080x1080)', width: '500px', height: '500px', description: 'Instagram posts, Facebook posts' },
+  { id: 'square-large', name: 'Large Square (1200x1200)', width: '550px', height: '550px', description: 'High-res Instagram, premium social posts' },
   { id: 'landscape', name: 'Landscape (1200x630)', width: '600px', height: '315px', description: 'Facebook cover, LinkedIn posts' },
   { id: 'linkedin-sponsored', name: 'LinkedIn Sponsored (1200x627)', width: '600px', height: '313px', description: 'LinkedIn sponsored content' },
   { id: 'portrait', name: 'Portrait (1080x1920)', width: '300px', height: '533px', description: 'Instagram Stories, TikTok' },
+  { id: 'mobile', name: 'Mobile (720x900)', width: '360px', height: '450px', description: 'Mobile-optimized ads, app banners' },
   { id: 'banner', name: 'Banner (728x90)', width: '728px', height: '90px', description: 'Web banners, headers' },
 ];
 

@@ -157,7 +157,13 @@ const EditableSolution: React.FC<EditableSolutionProps> = ({ content, onChange, 
   ];
 
   return (
-    <div className={`relative ${classes.container} overflow-hidden h-full flex flex-col justify-center`}>
+    <div className={`relative ${classes.container} overflow-hidden h-full flex flex-col justify-center bg-gradient-to-br from-teal-50 via-white to-purple-50`}>
+      {/* Subtle decorative background pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-4 right-4 w-10 h-10 bg-green-200 rounded-full"></div>
+        <div className="absolute bottom-6 left-4 w-6 h-6 bg-blue-200 rounded-full"></div>
+        <div className="absolute top-1/2 left-1/4 w-4 h-4 bg-purple-200 rounded-full"></div>
+      </div>
       <div className="text-center">
         {/* Main Headline */}
         <h2 className={`${classes.heading} text-gray-900 ${classes.spacing}`}>
