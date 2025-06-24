@@ -46,6 +46,12 @@ const AdBuilder = () => {
     ctaText: 'Start building momentum'
   });
 
+  // State for font size controls
+  const [fontSizes, setFontSizes] = useState({
+    heroHeadline: 'normal', // small, normal, large, xl
+    heroSubtext: 'normal'
+  });
+
   // State for editable content - Problem section
   const [problemContent, setProblemContent] = useState({
     mainHeadline: 'Just applying to jobs',
@@ -88,6 +94,7 @@ const AdBuilder = () => {
           <EditableHero 
             content={heroContent}
             onChange={setHeroContent}
+            fontSizes={fontSizes}
             {...commonProps}
           />
         );
@@ -182,6 +189,44 @@ const AdBuilder = () => {
                   </RadioGroup>
                 </CardContent>
               </Card>
+
+              {/* Font Size Controls - Only show for Hero section */}
+              {selectedSection === 'hero' && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Font Sizes</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="headline-size" className="text-sm font-medium">Headline Size</Label>
+                      <Select value={fontSizes.heroHeadline} onValueChange={(value) => setFontSizes(prev => ({ ...prev, heroHeadline: value }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="small">Small</SelectItem>
+                          <SelectItem value="normal">Normal</SelectItem>
+                          <SelectItem value="large">Large</SelectItem>
+                          <SelectItem value="xl">Extra Large</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="subtext-size" className="text-sm font-medium">Subtext Size</Label>
+                      <Select value={fontSizes.heroSubtext} onValueChange={(value) => setFontSizes(prev => ({ ...prev, heroSubtext: value }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="small">Small</SelectItem>
+                          <SelectItem value="normal">Normal</SelectItem>
+                          <SelectItem value="large">Large</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Instructions */}
               <Card>

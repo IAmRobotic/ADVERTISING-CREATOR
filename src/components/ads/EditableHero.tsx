@@ -23,14 +23,20 @@ interface AdSize {
   height: string;
 }
 
+interface FontSizes {
+  heroHeadline: string;
+  heroSubtext: string;
+}
+
 interface EditableHeroProps {
   content: HeroContent;
   onChange: (content: HeroContent) => void;
   isExportMode: boolean;
   adSize: AdSize;
+  fontSizes: FontSizes;
 }
 
-const EditableHero: React.FC<EditableHeroProps> = ({ content, onChange, isExportMode, adSize }) => {
+const EditableHero: React.FC<EditableHeroProps> = ({ content, onChange, isExportMode, adSize, fontSizes }) => {
   // State for tracking which field is being edited
   const [editingField, setEditingField] = useState<string | null>(null);
 
@@ -95,6 +101,26 @@ const EditableHero: React.FC<EditableHeroProps> = ({ content, onChange, isExport
     );
   };
 
+  // Get font size classes based on user selection
+  const getFontSizeClasses = (type: 'headline' | 'subtext', baseSize: string) => {
+    const sizeMap = {
+      headline: {
+        small: 'text-2xl sm:text-3xl md:text-4xl',
+        normal: 'text-3xl sm:text-4xl md:text-5xl',
+        large: 'text-4xl sm:text-5xl md:text-6xl',
+        xl: 'text-5xl sm:text-6xl md:text-7xl'
+      },
+      subtext: {
+        small: 'text-sm sm:text-base',
+        normal: 'text-base sm:text-lg md:text-xl',
+        large: 'text-lg sm:text-xl md:text-2xl'
+      }
+    };
+
+    const userSize = type === 'headline' ? fontSizes.heroHeadline : fontSizes.heroSubtext;
+    return sizeMap[type][userSize as keyof typeof sizeMap[typeof type]] || baseSize;
+  };
+
   // Dynamic sizing based on ad format
   const getResponsiveClasses = () => {
     const isSquare = adSize.id === 'square';
@@ -105,8 +131,8 @@ const EditableHero: React.FC<EditableHeroProps> = ({ content, onChange, isExport
     if (isBanner) {
       return {
         container: 'p-2',
-        heading: 'text-lg font-bold leading-tight',
-        subtext: 'text-xs leading-tight',
+        heading: getFontSizeClasses('headline', 'text-lg leading-tight'),
+        subtext: getFontSizeClasses('subtext', 'text-xs leading-tight'),
         button: 'px-2 py-1 text-xs',
         spacing: 'mb-1'
       };
@@ -115,30 +141,30 @@ const EditableHero: React.FC<EditableHeroProps> = ({ content, onChange, isExport
     if (isPortrait) {
       return {
         container: 'p-4',
-        heading: 'text-xl font-bold leading-tight',
-        subtext: 'text-sm leading-relaxed',
+        heading: getFontSizeClasses('headline', 'text-2xl sm:text-3xl leading-tight'),
+        subtext: getFontSizeClasses('subtext', 'text-sm sm:text-base leading-relaxed'),
         button: 'px-4 py-2 text-sm',
-        spacing: 'mb-2'
-      };
-    }
-
-    if (isLandscape) {
-      return {
-        container: 'p-4',
-        heading: 'text-2xl font-bold leading-tight',
-        subtext: 'text-base leading-relaxed',
-        button: 'px-4 py-2 text-base',
         spacing: 'mb-3'
       };
     }
 
-    // Square (default)
+    if (isLandscape || adSize.id === 'linkedin-sponsored') {
+      return {
+        container: 'p-4',
+        heading: getFontSizeClasses('headline', 'text-3xl sm:text-4xl md:text-5xl leading-tight'),
+        subtext: getFontSizeClasses('subtext', 'text-base sm:text-lg leading-relaxed'),
+        button: 'px-4 py-2 text-base',
+        spacing: 'mb-4'
+      };
+    }
+
+    // Square and other formats (default) - match original landing page proportions
     return {
       container: 'p-6',
-      heading: 'text-3xl font-bold leading-tight',
-      subtext: 'text-lg leading-relaxed',
+      heading: getFontSizeClasses('headline', 'text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-tight'),
+      subtext: getFontSizeClasses('subtext', 'text-base sm:text-lg md:text-xl leading-relaxed'),
       button: 'px-6 py-3 text-lg',
-      spacing: 'mb-4'
+      spacing: 'mb-6'
     };
   };
 
@@ -154,10 +180,12 @@ const EditableHero: React.FC<EditableHeroProps> = ({ content, onChange, isExport
       </div>
       <div className="text-center">
         {/* Main Headline */}
-        <h1 className={`${classes.heading} text-gray-900 ${classes.spacing}`}>
-          {renderEditableText('mainHeadline', 'inline-block')}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-teal-600">
-            {" "}{renderEditableText('highlightedText', 'inline-block')}
+        <h1 className={`${classes.heading} font-bold text-gray-900 ${classes.spacing} leading-tight`}>
+          <span className="block">
+            {renderEditableText('mainHeadline', 'inline-block')}
+          </span>
+          <span className="block text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-teal-600">
+            {renderEditableText('highlightedText', 'inline-block')}
           </span>
         </h1>
         
