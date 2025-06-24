@@ -16,7 +16,7 @@
  * - Responsive design: adapts content to fit each ad format perfectly
  * 
  * @author AI Assistant
- * @version 2.5
+ * @version 2.4
  */
 
 import React, { useState } from 'react';
