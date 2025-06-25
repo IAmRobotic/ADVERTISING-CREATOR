@@ -42,6 +42,7 @@ const adSizes = [
   { id: 'portrait', name: 'Portrait (1080x1920)', width: '300px', height: '533px', description: 'Instagram Stories, TikTok' },
   { id: 'mobile', name: 'Mobile (720x900)', width: '360px', height: '450px', description: 'Mobile-optimized ads, app banners' },
   { id: 'banner', name: 'Banner (728x90)', width: '728px', height: '90px', description: 'Web banners, headers' },
+  { id: 'large-landscape', name: 'Large Landscape (1440x1080)', width: '720px', height: '540px', description: 'High-res landscape, YouTube, premium web ads' },
 ];
 
 /**
